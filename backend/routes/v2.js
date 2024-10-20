@@ -2,9 +2,8 @@ const express = require("express");
 const serverResponses = require("../utils/helpers/responses");
 const messages = require("../config/messages");
 const { Todo } = require("../models/todos/todo");
-const v2Routes = require("./v2"); // Import the v2 routes
 
-const routes = (app) => {
+const v2Routes = (app) => {
   const router = express.Router();
 
   router.post("/todos", (req, res) => {
@@ -51,11 +50,7 @@ const routes = (app) => {
       });
   });
 
-  //it's a prefix before api it is useful when you have many modules and you want to
-  //differentiate b/w each module you can use this technique
-  app.use("/api", router);
-
-  // Add the v2 routes
-  v2Routes(app); // Use the v2 routes
+  app.use("/api-v2", router);
 };
-module.exports = routes;
+
+module.exports = v2Routes;
