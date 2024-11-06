@@ -7,6 +7,17 @@ const mongoose = require("mongoose");
 const v2Routes = (app) => {
   const router = express.Router();
 
+  // Helper function to validate ObjectIDs
+  const isValidObjectId = (id) => {
+    try {
+      const objectId = new mongoose.Types.ObjectId(id);
+      // Pre-Mongoose 7.x pattern for checking ObjectID type
+      return objectId._bsontype === 'ObjectID';
+    } catch (e) {
+      return false;
+    }
+  };
+
   router.post("/todos", (req, res) => {
     const todo = new Todo({
       text: req.body.text,
@@ -57,7 +68,16 @@ const v2Routes = (app) => {
    */
   // Add a new route to mark multiple todos as completed
   router.patch("/todos/complete", (req, res) => {
-    const { ids } = req.body; // Expecting an array of todo IDs
+    const { ids } = req.body;
+
+    // Validate all IDs are valid ObjectIDs
+    const invalidIds = ids.filter(id => !isValidObjectId(id));
+    if (invalidIds.length > 0) {
+      return serverResponses.sendError(
+        res, 
+        { ...messages.BAD_REQUEST, message: `Invalid ObjectIDs: ${invalidIds.join(', ')}` }
+      );
+    }
 
     // Use Model.update() to mark todos as completed
     Todo.update(
