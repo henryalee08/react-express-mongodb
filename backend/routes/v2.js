@@ -2,6 +2,7 @@ const express = require("express");
 const serverResponses = require("../utils/helpers/responses");
 const messages = require("../config/messages");
 const { Todo } = require("../models/todos/todo");
+const mongoose = require("mongoose");
 
 const v2Routes = (app) => {
   const router = express.Router();
@@ -155,6 +156,32 @@ const v2Routes = (app) => {
         .catch((e) => {
             serverResponses.sendError(res, messages.BAD_REQUEST, e);
         });
+  });
+
+  // Route to get a specific todo by ID
+  router.get("/todos/:id", (req, res) => {
+    const id = req.params.id;
+
+    // Check if the provided ID is a valid ObjectId
+    const oid = new mongoose.Types.ObjectId(id); // Create a new ObjectId instance
+
+    // Using the pre-Mongoose 7.x pattern to check the _bsontype property
+    if (oid._bsontype === 'ObjectID') { // Check if the _bsontype is 'ObjectID'
+      // Proceed to find the todo by ID
+      Todo.findById(id)
+        .then((todo) => {
+          if (!todo) {
+            return serverResponses.sendError(res, messages.NOT_FOUND, "Todo not found");
+          }
+          serverResponses.sendSuccess(res, messages.SUCCESSFUL, todo);
+        })
+        .catch((e) => {
+          serverResponses.sendError(res, messages.BAD_REQUEST, e);
+        });
+    } else {
+      // If the ID is not a valid ObjectId, send an error response
+      serverResponses.sendError(res, messages.BAD_REQUEST, "Invalid ID format");
+    }
   });
 
   app.use("/api-v2", router);
