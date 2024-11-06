@@ -16,10 +16,24 @@ const Todo = mongoose.model('Todo', {
     priority: {
         type: Number,
         default: 1
+    },
+    parentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Todo',
+        required: false
     }
 });
 
-// Set strict query mode to true (pre-7.x behavior)
+Todo.validateObjectId = function(id) {
+    if (!id) return false;
+    try {
+        const objectId = new mongoose.Types.ObjectId(id);
+        return objectId._bsontype === 'ObjectID';
+    } catch (e) {
+        return false;
+    }
+};
+
 Todo.schema.set('strictQuery', true);
 
-module.exports = {Todo};
+module.exports = { Todo };

@@ -19,8 +19,19 @@ const v2Routes = (app) => {
   };
 
   router.post("/todos", (req, res) => {
+    const { text, parentId } = req.body;
+    
+    // Validate parentId if provided
+    if (parentId && !Todo.validateObjectId(parentId)) {
+        return serverResponses.sendError(
+            res,
+            { ...messages.BAD_REQUEST, message: 'Invalid parent todo ID' }
+        );
+    }
+
     const todo = new Todo({
-      text: req.body.text,
+        text,
+        parentId: parentId || null
     });
 
     todo
