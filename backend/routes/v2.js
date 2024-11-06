@@ -119,6 +119,44 @@ const v2Routes = (app) => {
       });
   });
 
+  // Add this route after line 92
+  router.get("/todos/search", (req, res) => {
+    // Even if query contains fields not in schema, they will be stripped
+    // due to strictQuery: true
+    const searchCriteria = req.query;
+    
+    Todo.find(searchCriteria)
+        .then((todos) => {
+            serverResponses.sendSuccess(res, messages.SUCCESSFUL, todos);
+        })
+        .catch((e) => {
+            serverResponses.sendError(res, messages.BAD_REQUEST, e);
+        });
+  });
+
+  // Add this route after the search route
+  router.get("/todos/filter", (req, res) => {
+    // Create a filtered query object with only valid schema fields
+    const validFields = ['text', 'completed', 'priority'];
+    const filterCriteria = {};
+    
+    validFields.forEach(field => {
+        if (req.query[field] !== undefined) {
+            filterCriteria[field] = req.query[field];
+        }
+    });
+
+    // Due to strictQuery: true, any additional fields in the query
+    // will be automatically stripped
+    Todo.find(filterCriteria)
+        .then((todos) => {
+            serverResponses.sendSuccess(res, messages.SUCCESSFUL, todos);
+        })
+        .catch((e) => {
+            serverResponses.sendError(res, messages.BAD_REQUEST, e);
+        });
+  });
+
   app.use("/api-v2", router);
 };
 
